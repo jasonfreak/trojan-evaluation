@@ -32,8 +32,8 @@ def compute(matrix):
 
 def main():
     parser = ArgumentParser(description='Computue Weights By Fuzzy-AHP')
-    parser.add_argument('filepath', action='store', help='filepath')
-    parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='delimiter')
+    parser.add_argument('filepath', action='store', help='Filepath')
+    parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='Delimiter')
     args = parser.parse_args()
 
     matrix = np.loadtxt(args.filepath, delimiter=args.delimiter)

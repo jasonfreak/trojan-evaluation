@@ -31,7 +31,7 @@ insert into sample select id, name, type, url, grade, time from trojan where gra
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'rootkit' order by random()             limit 0;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-clicker' order by random()      limit 1;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-downloader' order by random()   limit 3;
-insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-dropper' order by random()      limit 1;
+insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-dropper' order by random()      limit 2;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-psw' order by random()          limit 1;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-proxy' order by random()        limit 0;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '3' and type = 'trojan-spy' order by random()          limit 0;
@@ -49,12 +49,3 @@ insert into sample select id, name, type, url, grade, time from trojan where gra
 insert into sample select id, name, type, url, grade, time from trojan where grade = '2' and type = 'trojan-spy' order by random()          limit 2;
 insert into sample select id, name, type, url, grade, time from trojan where grade = '2' and type = 'trojan' order by random()              limit 3;
 */
-
-drop table if exists feature;
-create table feature
-(
-name varchar(256),
-lvl int,
-val double,
-primary key(name, lvl)
-);
