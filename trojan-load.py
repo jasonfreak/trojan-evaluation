@@ -9,7 +9,7 @@ def main():
     data = load(file('data/trojan.json'))
     i = 1
     for trojan in data['trojan']:
-        sql = 'insert into trojan values({id}, \'{name}\', \'{url}\', {grade}, \'{time}\')'.format(id=i, **trojan)
+        sql = 'insert into trojan values({id}, \'{name}\', \'{type}\', \'{url}\', {grade}, \'{time}\')'.format(id=i, **trojan)
         cs.execute(sql)
         i += 1
         

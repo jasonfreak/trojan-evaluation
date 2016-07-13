@@ -1,4 +1,5 @@
 import scrapy
+_trojanTypeList = ('backdoor', 'exploit', 'rootkit', 'adware', 'trojan', 'trojan-banker', 'trojan-ddos', 'trojan-downloader', 'trojan-dropper', 'trojan-fakeav', 'trojan-gamethief ', 'trojan-im', 'trojan-ransom', 'trojan-sms', 'trojan-spy', 'trojan-mailfinder', 'trojan-arcbomb', 'trojan-clicker', 'trojan-notifier', 'trojan-proxy', 'trojan-psw')
 
 class StackOverflowSpider(scrapy.Spider):
     name = 'stackoverflow'
@@ -13,9 +14,12 @@ class StackOverflowSpider(scrapy.Spider):
         content = response.css('.div_contenttext p::text').extract()
         content = map(lambda x: x.strip(), content)
         content = filter(lambda x: len(x) > 0, content)
-        if content[0][0:6] == 'Trojan':
+        virusName = content[0].lower()
+        virusType = virusName.split('.')[0]
+        if virusType in _trojanTypeList:
             yield {
-                'name': content[0],
+                'name': virusName,
+                'type': virusType,
                 'time': content[1],
                 'grade': content[2],
                 'url': response.url }
