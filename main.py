@@ -42,6 +42,17 @@ def cov(matrix, config):
     newMatrix = StandardScaler().fit_transform(newMatrix)
     return np.dot(newMatrix, weight)
 
+def ent(matrix, config):
+    newMatrix = transfer(matrix, config)
+    absMatrix = np.abs(newMatrix)
+    percentage = newMatrix / np.sum(absMatrix, axis=0).reshape((1, -1))
+    percentage = np.nan_to_num(percentage)
+    entropy = - np.sum(percentage * np.nan_to_num(np.log2(percentage)), axis=0)
+    weight = np.log2(newMatrix.shape[0]) - entropy
+    weight = weight / np.sum(weight)
+    newMatrix = StandardScaler().fit_transform(newMatrix)
+    return np.dot(newMatrix, weight)
+
 def em(matrix, config, compute, n_jobs):
     computeNorm = stats.norm(0, 1).pdf
 
@@ -74,7 +85,7 @@ def em(matrix, config, compute, n_jobs):
 
 def main():
     parser = ArgumentParser(description='Evaluate Trojan')
-    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'em'), help='Action')
+    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'em', 'ent'), help='Action')
     parser.add_argument('filepath', action='store', help='Filepath')
     parser.add_argument('-c', action='store', dest='configure', default='./conf/feature.json',  help='Configure File')
     parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='Delimiter')
@@ -85,7 +96,7 @@ def main():
     with open(args.configure) as f:
         config = load(f, encoding='cp936')
 
-    compute = {'fahp':fahp, 'cov':cov}
+    compute = {'fahp':fahp, 'cov':cov, 'ent':ent}
     if args.action == 'em':
         assert(args.n_jobs > 0)
         scoreList = em(matrix, config, compute, args.n_jobs)
