@@ -24,85 +24,67 @@ def transfer(matrix, config):
 def fahp(matrix, config):
     n_rows, n_cols = matrix.shape
     weight = np.zeros(n_cols)
-    
-    newMatrix = transfer(matrix, config)
-
-    newMatrix = StandardScaler().fit_transform(newMatrix)
 
     for j in range(n_cols):
         weight[j] = config['feature'][j]['weight']
 
-    return np.dot(newMatrix, weight)
+    return weight
 
 def cov(matrix, config):
-    newMatrix = transfer(matrix, config)
-    weight = np.std(newMatrix, axis=0) / np.abs(np.mean(newMatrix, axis=0))
+    weight = np.std(matrix, axis=0) / np.abs(np.mean(matrix, axis=0))
     weight = np.nan_to_num(weight)
     weight = weight / np.sum(weight)
-    print weight
-    newMatrix = StandardScaler().fit_transform(newMatrix)
-    return np.dot(newMatrix, weight)
+    return weight
 
 def ent(matrix, config):
-    newMatrix = transfer(matrix, config)
-    absMatrix = np.abs(newMatrix) + 1
+    absMatrix = np.abs(matrix) + 1
     percentage = absMatrix / np.sum(absMatrix, axis=0)
     entropy = - np.sum(percentage * np.log2(percentage), axis=0)
-    weight = np.log2(newMatrix.shape[0]) - entropy
+    weight = np.log2(matrix.shape[0]) - entropy
     weight = weight / np.sum(weight)
-    newMatrix = StandardScaler().fit_transform(newMatrix)
-    return np.dot(newMatrix, weight)
+    return weight
 
-def em(matrix, config, compute, n_jobs):
-    computeNorm = stats.norm(0, 1).pdf
-
-    newMatrix = transfer(matrix, config)
-    funcList = compute.values()
-
-    n_components = len(funcList)
-    model =GMM(n_components=n_components, n_iter=1) 
-    model.fit(newMatrix)
-    rList = model.predict(newMatrix)
-    pList = model.predict_proba(newMatrix)
-
-    maxProb = 0
-    bestMapping = None
-    matrixList = [matrix[rList == i] for i in range(n_components)]
-    for mapping in permutations(range(n_components), n_components):
-        probComponent = 0
-        scoreList = Parallel(n_jobs=n_jobs)(delayed(funcList[mapping[i]])(matrixList[i], config) for i in range(n_components))
-        probList = np.array(map(lambda x:reduce(lambda y,z:y*computeNorm(z), x, 1), scoreList))
-        weightList = np.array(map(lambda x:x.shape[0], matrixList), dtype=np.float64) / newMatrix.shape[0]
-        prob = np.dot(probList, weightList)
-        if prob > maxProb:
-            maxProb = prob
-            bestMapping = mapping
-
-
-    scoreMatrix = np.array(Parallel(n_jobs=n_jobs)(delayed(funcList[bestMapping[i]])(matrix, config) for i in range(n_components))).T
-    weightList = pList / np.sum(pList, axis=1).reshape((-1,1))
-    print np.max(weightList, axis=1)
-    return np.sum(scoreMatrix * weightList, axis=1)
+def grey(matrix, config):
+    X0 = np.max(matrix, axis=0)
+    delta = np.abs(X0.reshape((1,-1)) - matrix)
+    minmin = np.min(delta)
+    maxmax = np.max(delta)
+    corr = (minmin + config['r'] * maxmax) / (delta + config['r'] * maxmax)
+    weight = np.sum(corr, axis=0)
+    weight = weight / np.sum(weight)
+    return weight
 
 def main():
     parser = ArgumentParser(description='Evaluate Trojan')
-    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'em', 'ent'), help='Action')
+    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'ent', 'grey', 'comb'), help='Action')
     parser.add_argument('filepath', action='store', help='Filepath')
     parser.add_argument('-c', action='store', dest='configure', default='./conf/feature.json',  help='Configure File')
     parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='Delimiter')
-    parser.add_argument('-n', action='store', dest='n_jobs', type=int, default=1,  help='Delimiter')
+    parser.add_argument('-s', action='append', dest='subject', default=[],  help='Subject Weighing Methods')
+    parser.add_argument('-o', action='store', dest='object', default='ent',  help='Object Weighing Method')
+    parser.add_argument('-n', action='store', dest='n_jobs', type=int, default=1,  help='Number Of Jobs')
     args = parser.parse_args()
 
     matrix = np.loadtxt(args.filepath, dtype=np.str, delimiter=args.delimiter)
     with open(args.configure) as f:
         config = load(f, encoding='cp936')
 
-    compute = {'fahp':fahp, 'cov':cov, 'ent':ent}
-    if args.action == 'em':
+    newMatrix = transfer(matrix, config)
+
+    compute = {'fahp':fahp, 'cov':cov, 'ent':ent, 'grey':grey}
+    if args.action == 'comb':
         assert(args.n_jobs > 0)
-        scoreList = em(matrix, config, compute, args.n_jobs)
+        assert(len(args.subject) > 1)
+        weightList = np.array(Parallel(n_jobs=args.n_jobs)(delayed(compute[action])(newMatrix, config) for action in args.subject))
+        objectWeight = compute[args.object](newMatrix, config)
+        sim = 1 - np.abs(weightList - objectWeight.reshape((1,-1)))
+        weightList = weightList * sim
+        weight = np.sum(weightList, axis=0)
+        weight = weight / np.sum(weight)
     else:
-        scoreList = compute[args.action](matrix, config)
+        weight = compute[args.action](newMatrix, config) 
+    newMatrix = StandardScaler().fit_transform(newMatrix)
+    scoreList = np.dot(newMatrix, weight)
     for score in scoreList:
         print score
 
