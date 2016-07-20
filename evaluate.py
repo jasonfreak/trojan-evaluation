@@ -36,18 +36,18 @@ def fahp(matrix, config):
 
 def cov(matrix, config):
     newMatrix = transfer(matrix, config)
-    weight = np.std(newMatrix, axis=0) / np.mean(newMatrix, axis=0)
+    weight = np.std(newMatrix, axis=0) / np.abs(np.mean(newMatrix, axis=0))
     weight = np.nan_to_num(weight)
     weight = weight / np.sum(weight)
+    print weight
     newMatrix = StandardScaler().fit_transform(newMatrix)
     return np.dot(newMatrix, weight)
 
 def ent(matrix, config):
     newMatrix = transfer(matrix, config)
-    absMatrix = np.abs(newMatrix)
-    percentage = newMatrix / np.sum(absMatrix, axis=0).reshape((1, -1))
-    percentage = np.nan_to_num(percentage)
-    entropy = - np.sum(percentage * np.nan_to_num(np.log2(percentage)), axis=0)
+    absMatrix = np.abs(newMatrix) + 1
+    percentage = absMatrix / np.sum(absMatrix, axis=0)
+    entropy = - np.sum(percentage * np.log2(percentage), axis=0)
     weight = np.log2(newMatrix.shape[0]) - entropy
     weight = weight / np.sum(weight)
     newMatrix = StandardScaler().fit_transform(newMatrix)
@@ -60,7 +60,7 @@ def em(matrix, config, compute, n_jobs):
     funcList = compute.values()
 
     n_components = len(funcList)
-    model =GMM(n_components=n_components) 
+    model =GMM(n_components=n_components, n_iter=1) 
     model.fit(newMatrix)
     rList = model.predict(newMatrix)
     pList = model.predict_proba(newMatrix)
@@ -81,6 +81,7 @@ def em(matrix, config, compute, n_jobs):
 
     scoreMatrix = np.array(Parallel(n_jobs=n_jobs)(delayed(funcList[bestMapping[i]])(matrix, config) for i in range(n_components))).T
     weightList = pList / np.sum(pList, axis=1).reshape((-1,1))
+    print np.max(weightList, axis=1)
     return np.sum(scoreMatrix * weightList, axis=1)
 
 def main():
