@@ -56,7 +56,7 @@ def grey(matrix, config):
 
 def main():
     parser = ArgumentParser(description='Evaluate Trojan')
-    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'ent', 'grey', 'bias', 'mulp', 'cred'), help='Action')
+    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'ent', 'grey', 'bias', 'mult', 'cred'), help='Action')
     parser.add_argument('filepath', action='store', help='Filepath')
     parser.add_argument('-c', action='store', dest='configure', default='./conf/feature.json',  help='Configure File')
     parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='Delimiter')
@@ -82,7 +82,7 @@ def main():
         weightList = weightList * sim
         weight = np.sum(weightList, axis=0)
         weight = weight / np.sum(weight)
-    elif args.action == 'mulp':
+    elif args.action == 'mult':
         assert(args.n_jobs > 0)
         assert(len(args.subject) == 1)
         subjectWeight = compute[args.subject[0]](newMatrix, config)
