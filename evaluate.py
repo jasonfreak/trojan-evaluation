@@ -56,12 +56,13 @@ def grey(matrix, config):
 
 def main():
     parser = ArgumentParser(description='Evaluate Trojan')
-    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'ent', 'grey', 'comb'), help='Action')
+    parser.add_argument('action', action='store', choices=('fahp', 'cov', 'ent', 'grey', 'bias', 'mulp', 'cred'), help='Action')
     parser.add_argument('filepath', action='store', help='Filepath')
     parser.add_argument('-c', action='store', dest='configure', default='./conf/feature.json',  help='Configure File')
     parser.add_argument('-d', action='store', dest='delimiter', default='\t',  help='Delimiter')
     parser.add_argument('-s', action='append', dest='subject', default=[],  help='Subject Weighing Methods')
     parser.add_argument('-o', action='store', dest='object', default='ent',  help='Object Weighing Method')
+    parser.add_argument('-l', action='store', dest='lmd', type=float, default=0.5,  help='Lambda')
     parser.add_argument('-n', action='store', dest='n_jobs', type=int, default=1,  help='Number Of Jobs')
     args = parser.parse_args()
 
@@ -72,7 +73,7 @@ def main():
     newMatrix = transfer(matrix, config)
 
     compute = {'fahp':fahp, 'cov':cov, 'ent':ent, 'grey':grey}
-    if args.action == 'comb':
+    if args.action == 'bias':
         assert(args.n_jobs > 0)
         assert(len(args.subject) > 1)
         weightList = np.array(Parallel(n_jobs=args.n_jobs)(delayed(compute[action])(newMatrix, config) for action in args.subject))
@@ -80,6 +81,21 @@ def main():
         sim = 1 - np.abs(weightList - objectWeight.reshape((1,-1)))
         weightList = weightList * sim
         weight = np.sum(weightList, axis=0)
+        weight = weight / np.sum(weight)
+    elif args.action == 'mulp':
+        assert(args.n_jobs > 0)
+        assert(len(args.subject) == 1)
+        subjectWeight = compute[args.subject[0]](newMatrix, config)
+        objectWeight = compute[args.object](newMatrix, config)
+        weight = subjectWeight * objectWeight
+        weight = weight / np.sum(weight)
+    elif args.action == 'cred':
+        assert(args.n_jobs > 0)
+        assert(len(args.subject) == 1)
+        assert(0 < args.lmd and args.lmd < 1)
+        subjectWeight = compute[args.subject[0]](newMatrix, config)
+        objectWeight = compute[args.object](newMatrix, config)
+        weight = subjectWeight * args.lmd + objectWeight * (1 - args.lmd)
         weight = weight / np.sum(weight)
     else:
         weight = compute[args.action](newMatrix, config) 
