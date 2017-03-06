@@ -17,8 +17,8 @@ def accuracyAnalyze(config, matrix):
         scatterList.append(scatter)
         labelList.append(grade['label'])
 
-    plt.axis([0, matrix.size+2, -1, 1])
-    plt.ylabel(u'评估结果')
+    plt.axis([0, matrix.size+2, 0, 1])
+    plt.ylabel(u'定量评估结果')
     plt.xlabel(u'木马病毒序号')
     plt.legend(scatterList, labelList, loc='best', scatterpoints=1)
     plt.title(config['title'])

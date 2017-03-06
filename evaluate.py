@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from json import load
 import numpy as np
 from scipy import stats
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.mixture import GMM
 from sklearn.externals.joblib import Parallel, delayed
 
@@ -99,7 +99,8 @@ def main():
         weight = weight / np.sum(weight)
     else:
         weight = compute[args.action](newMatrix, config) 
-    newMatrix = StandardScaler().fit_transform(newMatrix)
+#    newMatrix = StandardScaler().fit_transform(newMatrix)
+    newMatrix = MinMaxScaler().fit_transform(newMatrix)
     scoreList = np.dot(newMatrix, weight)
     for score in scoreList:
         print score
