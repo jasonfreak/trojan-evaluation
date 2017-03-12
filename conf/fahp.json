@@ -1,14 +1,14 @@
 {
-    "title": "基于FAHP方法的木马危害性事后评估对比实验结果",
+    "title": "基于FAHP方法的木马危害性离线评估对比实验结果",
     "gradeList": [
         {
             "n_samples": 8,
-            "color": "#ff0000",
+            "color": "#000000",
             "label": "高度危害"
         },
         {
             "n_samples": 37,
-            "color": "#ffcc00",
+            "color": "#ffffff",
             "label": "中度危害"
         }
     ]

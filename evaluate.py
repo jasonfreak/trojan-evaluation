@@ -78,6 +78,8 @@ def main():
         assert(len(args.subject) > 1)
         weightList = np.array(Parallel(n_jobs=args.n_jobs)(delayed(compute[action])(newMatrix, config) for action in args.subject))
         objectWeight = compute[args.object](newMatrix, config)
+        print weightList
+        print objectWeight
         sim = 1 - np.abs(weightList - objectWeight.reshape((1,-1)))
         weightList = weightList * sim
         weight = np.sum(weightList, axis=0)
@@ -99,6 +101,7 @@ def main():
         weight = weight / np.sum(weight)
     else:
         weight = compute[args.action](newMatrix, config) 
+    print weight
 #    newMatrix = StandardScaler().fit_transform(newMatrix)
     newMatrix = MinMaxScaler().fit_transform(newMatrix)
     scoreList = np.dot(newMatrix, weight)

@@ -2,12 +2,12 @@
     "title": "基于变异系数赋权法的评估结果",
     "gradeList": [
         {
-            "n_samples": 10,
+            "n_samples": 8,
             "color": "#ff0000",
             "label": "高度危害"
         },
         {
-            "n_samples": 40,
+            "n_samples": 37,
             "color": "#ffcc00",
             "label": "中度危害"
         }
